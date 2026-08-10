@@ -25,7 +25,7 @@ Convert Word documents (.doc / .docx) to PDF with automatic format detection.
 ## Usage
 
 ```bash
-python "C:/Users/20174/.claude/skills/word2pdf/word2pdf.py" <input.doc|input.docx> [output.pdf]
+python "<LOCAL_USER>/.claude/skills/word2pdf/word2pdf.py" <input.doc|input.docx> [output.pdf]
 ```
 
 ### Arguments
@@ -39,13 +39,13 @@ python "C:/Users/20174/.claude/skills/word2pdf/word2pdf.py" <input.doc|input.doc
 
 ```bash
 # Convert .docx (auto-detect format, output = input_name.pdf)
-python "C:/Users/20174/.claude/skills/word2pdf/word2pdf.py" "report.docx"
+python "<LOCAL_USER>/.claude/skills/word2pdf/word2pdf.py" "report.docx"
 
 # Convert .doc (legacy binary format)
-python "C:/Users/20174/.claude/skills/word2pdf/word2pdf.py" "old_document.doc"
+python "<LOCAL_USER>/.claude/skills/word2pdf/word2pdf.py" "old_document.doc"
 
 # Convert with custom output path
-python "C:/Users/20174/.claude/skills/word2pdf/word2pdf.py" "report.docx" "output.pdf"
+python "<LOCAL_USER>/.claude/skills/word2pdf/word2pdf.py" "report.docx" "output.pdf"
 ```
 
 ## Dependencies

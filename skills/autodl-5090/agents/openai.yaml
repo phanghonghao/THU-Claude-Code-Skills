@@ -1,4 +1,0 @@
-interface:
-  display_name: "AutoDL 5090"
-  short_description: "Check AutoDL 5090 training tails and host status over SSH."
-  default_prompt: "Inspect the current AutoDL 5090 machine: use --tail for training progress or --status for CPU, RAM, disk, and GPU usage. --tail --status runs both."

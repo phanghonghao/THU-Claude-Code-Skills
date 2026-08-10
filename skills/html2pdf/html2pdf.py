@@ -146,15 +146,25 @@ def build_printable_html(input_path: Path, disable_fix: bool) -> Path:
 
 def print_to_pdf(browser: Path, html_path: Path, pdf_path: Path) -> None:
     pdf_path.parent.mkdir(parents=True, exist_ok=True)
-    cmd = [
-        str(browser),
-        "--headless",
-        "--disable-gpu",
-        f"--print-to-pdf={pdf_path}",
-        "--print-to-pdf-no-header",
-        file_url(html_path),
-    ]
-    subprocess.run(cmd, check=True)
+
+    # Render to an ASCII-named temp file first, then move into place. Chrome's
+    # new headless mode refuses to write directly to non-ASCII output paths on
+    # Windows ("access denied", 0x5); rendering to a temp path sidesteps that.
+    tmp_dir = Path(tempfile.mkdtemp(prefix="html2pdf_out_"))
+    tmp_pdf = tmp_dir / "output.pdf"
+    try:
+        cmd = [
+            str(browser),
+            "--headless=new",
+            "--disable-gpu",
+            "--no-pdf-header-footer",  # suppress the date/title header and URL/page footer
+            f"--print-to-pdf={tmp_pdf}",
+            file_url(html_path),
+        ]
+        subprocess.run(cmd, check=True)
+        shutil.move(str(tmp_pdf), str(pdf_path))
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 def count_pages(pdf_path: Path) -> int | None:

@@ -1,0 +1,58 @@
+% ============================================================
+% classic_single.tex —— resume-builder 的 LaTeX 模板（njq 风格）
+% ------------------------------------------------------------
+% 由 build_resume.py --engine tex 填充。token 为注释行 %@@NAME@@，
+% 脚本逐板块替换；无数据的板块自动消失（替换为空串）。
+% 风格来源：OTHERS_RESUME/苏州/njq/resume.tex
+%   - ctex 中文 / geometry 0.6in / titlesec titlerule 分节
+%   - enumitem 自定义 resumeitem 列表 / \linespread{1.8}
+% 证件照（opt-in）：render_header_tex 在有照片时追加 TikZ overlay，
+%   把 <stem>_photo.png 钉到页面右上角（需编译两次，脚本已自动跑两次）。
+% ============================================================
+\documentclass[9pt]{article}
+
+% --- 宏包 ---
+\usepackage{ctex}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{array}
+
+% --- 页面 ---
+\geometry{a4paper, margin=0.6in, top=0.5in, bottom=0.5in}
+\pagestyle{empty}
+\linespread{1.8} % 行距放大以填满整页、底部不留白；溢出时调小此值
+
+% --- 分节标题 + 分割线 ---
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+\titlespacing{\section}{0pt}{4pt}{2pt}
+
+% --- 自定义要点列表 ---
+\newlist{resumeitem}{itemize}{1}
+\setlist[resumeitem]{label=$\bullet$, leftmargin=1.2em, nosep, after=\vspace{1pt}, itemsep=0pt}
+
+\begin{document}
+
+%@@HEADER@@
+
+%@@EDUCATION@@
+
+%@@WORK@@
+
+%@@PROJECTS@@
+
+%@@LAB@@
+
+%@@CLUBS_COMPETITIONS@@
+
+%@@SELF@@
+
+%@@SKILLS@@
+
+%@@SOCIAL@@
+
+\end{document}

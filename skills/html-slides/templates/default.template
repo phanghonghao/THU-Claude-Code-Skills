@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!--
+  html-slides default template — Beamer-inspired skeleton, Tsinghua-purple palette.
+
+  HOW THIS TEMPLATE IS CONSUMED (LLM: read carefully)
+  - This is a REAL template, read and filled by the LLM — NOT generated from scratch.
+  - Two placeholders to substitute:
+      {{TITLE}}   → presentation title (also used for <title> and the cover slide)
+      {{SLIDES}}  → all <section class="slide">…</section> blocks, concatenated
+  - To override the accent color (user said "蓝色" / gave a hex), change ONLY the
+    :root CSS variables below. Do NOT touch the skeleton.
+  - Skeleton = Beamer clean look: title bar (bold accent title, left-aligned) +
+    thin full-width divider + rounded blocks + NO footer + NO visible nav.
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  /* ── Palette (Tsinghua purple default; override here to recolor) ── */
+  :root{
+    --accent:        #660874;  /* titles, links, key terms            */
+    --accent-strong: #9B30FF;  /* divider line under each title        */
+    --block-bg:      #F9F5FC;  /* rounded block fill                   */
+    --bg:            #FEFEFF;  /* slide background (near white)        */
+    --text:          #2D2D3A;  /* body text                            */
+    --caption:       #5A5A6E;  /* captions / source notes              */
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ background:#33373d; }              /* page gutter around the slide */
+
+  body{
+    font-family:"Noto Sans SC", -apple-system, "Segoe UI", sans-serif;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ── Presentation + slide canvas (fixed 16:9) ── */
+  .presentation{ width:1280px; height:720px; margin:24px auto; position:relative; }
+
+  .slide{
+    width:1280px; height:720px; background:var(--bg);
+    padding:54px 64px; position:absolute; inset:0;
+    display:none; flex-direction:column;
+    overflow:hidden;                                   /* content must NOT overflow 720px */
+  }
+  .slide.is-active{ display:flex; }
+
+  /* ── Beamer skeleton: title bar + divider (used on every non-cover slide) ── */
+  .titlebar{ display:flex; align-items:baseline; gap:16px; }
+  .frametitle{
+    color:var(--accent); font-weight:700; font-size:34px; line-height:1.2;
+    letter-spacing:.5px;
+  }
+  .divider{
+    height:2px; width:100%; background:var(--accent-strong);
+    margin:14px 0 28px; border:0;
+  }
+  .body{ flex:1 1 auto; min-height:0; }
+
+  /* ── Rounded block (maps from ### in source .md) ── */
+  .block{
+    background:var(--block-bg); border-radius:14px;
+    padding:20px 24px; margin-bottom:18px;
+  }
+  .block-title{
+    color:var(--accent); font-weight:700; font-size:23px; margin-bottom:10px;
+  }
+  .block p, .block li{ font-size:21px; line-height:1.65; }
+  .block ul, .block ol{ padding-left:26px; }
+  .block li{ margin:4px 0; }
+  strong{ color:var(--accent); font-weight:700; }
+
+  /* ── Columns (split / two-column layouts) ── */
+  .columns{ display:flex; gap:28px; }
+  .column{ flex:1 1 0; min-width:0; }
+
+  /* ── Step / grid (timelines, roadmaps) ── */
+  .grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+  .step .block{ border-top:4px solid var(--accent-strong); border-radius:10px; }
+
+  /* ── Cover slide ── */
+  .slide-cover{
+    justify-content:center; align-items:flex-start; text-align:left;
+    background:linear-gradient(135deg, #F3E5F8 0%, var(--bg) 60%);
+    padding:0 96px;
+  }
+  .cover-eyebrow{ color:var(--accent); font-weight:700; font-size:22px; letter-spacing:2px; margin-bottom:18px; }
+  .cover-title{ color:var(--accent); font-weight:900; font-size:60px; line-height:1.15; margin-bottom:22px; }
+  .cover-subtitle{ font-size:26px; color:var(--text); font-weight:500; margin-bottom:34px; }
+  .cover-tags{ display:flex; gap:12px; flex-wrap:wrap; }
+  .tag{
+    border:1.5px solid var(--accent-strong); color:var(--accent);
+    border-radius:999px; padding:7px 18px; font-size:20px; font-weight:500;
+  }
+
+  /* ── Conclusion banner ── */
+  .conclude{
+    margin-top:auto; background:linear-gradient(90deg,var(--accent),var(--accent-strong));
+    color:#fff; border-radius:14px; padding:22px 28px; font-size:24px; font-weight:700;
+  }
+
+  /* ── Captions / source notes (beamer footnotesize equivalent) ── */
+  .caption{ color:var(--caption); font-size:18px; margin-top:14px; }
+
+  /* ── Images ── */
+  img{ max-width:100%; border-radius:8px; }
+  .slide-split .media{ flex:0 0 460px; }
+  .slide-split .media img{ width:460px; height:100%; object-fit:cover; }
+
+  /* ── Tables ── */
+  table{ width:100%; border-collapse:collapse; font-size:20px; }
+  th{ background:var(--block-bg); color:var(--accent); font-weight:700; text-align:left; padding:10px 14px; }
+  td{ padding:10px 14px; border-bottom:1px solid #ECE3F2; }
+</style>
+</head>
+<body>
+<div class="presentation">
+{{SLIDES}}
+</div>
+
+<script>
+  // ── Invisible navigation (keyboard + touch). No on-screen chrome. ──
+  // Exposes window.show(i) — also called by the Playwright PDF exporter.
+  (function(){
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    if(!slides.length) return;
+    var idx = slides.findIndex(function(s){ return s.classList.contains('is-active'); });
+    if(idx < 0){ idx = 0; slides[0].classList.add('is-active'); }
+
+    function show(i){
+      if(i < 0) i = 0;
+      if(i > slides.length - 1) i = slides.length - 1;
+      slides[idx].classList.remove('is-active');
+      idx = i;
+      slides[idx].classList.add('is-active');
+    }
+    window.show = show;
+    window.slideCount = slides.length;
+
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown'){ e.preventDefault(); show(idx+1); }
+      else if(e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); show(idx-1); }
+      else if(e.key === 'Home'){ show(0); }
+      else if(e.key === 'End'){ show(slides.length-1); }
+    });
+
+    var tx = null;
+    document.addEventListener('touchstart', function(e){ tx = e.touches[0].clientX; }, {passive:true});
+    document.addEventListener('touchend', function(e){
+      if(tx === null) return;
+      var dx = e.changedTouches[0].clientX - tx;
+      if(Math.abs(dx) > 50){ dx < 0 ? show(idx+1) : show(idx-1); }
+      tx = null;
+    }, {passive:true});
+  })();
+</script>
+</body>
+</html>

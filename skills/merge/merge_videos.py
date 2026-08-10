@@ -11,8 +11,10 @@ import argparse
 import sys
 from pathlib import Path
 
+import imageio.v2 as imageio
 import imageio.v3 as iio
 import numpy as np
+import cv2
 from PIL import Image, ImageDraw, ImageFont
 
 # ── Layout definitions ──
@@ -77,8 +79,97 @@ def compute_positions(h, w, rows, cols, gap):
     return positions
 
 
+def _fit_size(width, height, max_width=None, max_height=None):
+    if max_width is None and max_height is None:
+        return width, height
+    cap_w = max_width if max_width is not None else width
+    cap_h = max_height if max_height is not None else height
+    scale = min(cap_w / width, cap_h / height, 1.0)
+    return max(1, int(round(width * scale))), max(1, int(round(height * scale)))
+
+
+def _draw_labels(canvas, positions, labels, font):
+    img = Image.fromarray(canvas)
+    draw = ImageDraw.Draw(img)
+    for (y, x), label in zip(positions, labels):
+        pos = (x + 6, y + 4)
+        bbox = draw.textbbox(pos, label, font=font)
+        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        draw.rounded_rectangle(
+            [pos[0] - 2, pos[1] - 1, pos[0] + tw + 4, pos[1] + th + 2],
+            radius=3, fill=(0, 0, 0, 180),
+        )
+        draw.text(pos, label, font=font, fill=(255, 255, 0))
+    return np.array(img)
+
+
+def _merge_videos_stream(video_paths, template, labels, output, gap, fps, font_size,
+                         loop_to_longest, cell_width, cell_height):
+    rows, cols = parse_template(template)
+    caps = []
+    sizes = []
+    counts = []
+    for p in video_paths:
+        cap = cv2.VideoCapture(str(p))
+        if not cap.isOpened():
+            raise RuntimeError(f"Could not open video: {p}")
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if count <= 0:
+            raise RuntimeError(f"Could not determine frame count: {p}")
+        sizes.append((height, width))
+        counts.append(count)
+        caps.append(cap)
+        print(f"  Opened {p.parent.name}/{p.name} ... {count} frames ({width}x{height})")
+
+    target_w = min(s[1] for s in sizes)
+    target_h = min(s[0] for s in sizes)
+    target_w, target_h = _fit_size(target_w, target_h, cell_width, cell_height)
+    out_n = max(counts) if loop_to_longest else min(counts)
+    out_h = rows * target_h + (rows - 1) * gap
+    out_w = cols * target_w + (cols - 1) * gap
+    positions = compute_positions(target_h, target_w, rows, cols, gap)
+    font = _get_font(font_size) if labels else None
+    mode = "loop-to-longest" if loop_to_longest else "crop-to-shortest"
+    print(f"  Target cell: {target_w}x{target_h}")
+    print(f"  Composing {out_n} frames at {out_w}x{out_h} ({template}, {mode}) ...")
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    writer = imageio.get_writer(str(output), fps=fps, codec="libx264", macro_block_size=1)
+    try:
+        for i in range(out_n):
+            canvas = np.full((out_h, out_w, 3), (60, 60, 60), dtype=np.uint8)
+            for j, (y, x) in enumerate(positions):
+                ok, frame_bgr = caps[j].read()
+                if not ok:
+                    if not loop_to_longest:
+                        raise RuntimeError(f"Unexpected early EOF: {video_paths[j]}")
+                    caps[j].set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    ok, frame_bgr = caps[j].read()
+                    if not ok:
+                        raise RuntimeError(f"Could not loop video: {video_paths[j]}")
+                frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+                if frame.shape[1] != target_w or frame.shape[0] != target_h:
+                    frame = cv2.resize(frame, (target_w, target_h), interpolation=cv2.INTER_AREA)
+                canvas[y:y + target_h, x:x + target_w] = frame
+            if labels:
+                canvas = _draw_labels(canvas, positions, labels, font)
+            writer.append_data(canvas)
+            if (i + 1) % 100 == 0:
+                print(f"    {i + 1}/{out_n}")
+    finally:
+        writer.close()
+        for cap in caps:
+            cap.release()
+
+    size_mb = output.stat().st_size / 1024 / 1024
+    print(f"\nDone: {output} ({out_n} frames, {size_mb:.1f} MB)")
+
+
 def merge_videos(videos, template, labels=None, output=None, gap=4, fps=30,
-                 font_size=20, no_labels=False):
+                 font_size=20, no_labels=False, loop_to_longest=False,
+                 stream=False, cell_width=None, cell_height=None):
     video_paths = [Path(p) for p in videos]
 
     # Determine template
@@ -120,6 +211,12 @@ def merge_videos(videos, template, labels=None, output=None, gap=4, fps=30,
             else:
                 labels.append(stem)
 
+    if stream:
+        return _merge_videos_stream(
+            video_paths, template, labels, output, gap, fps, font_size,
+            loop_to_longest, cell_width, cell_height,
+        )
+
     # Load videos
     all_frames = []
     sizes = []
@@ -130,9 +227,10 @@ def merge_videos(videos, template, labels=None, output=None, gap=4, fps=30,
         all_frames.append(raw)
         print(f"{len(raw)} frames ({raw[0].shape[1]}x{raw[0].shape[0]})")
 
-    # Target resolution: smallest common
+    # Target resolution: smallest common, optionally capped by caller.
     TARGET_W = min(s[1] for s in sizes)
     TARGET_H = min(s[0] for s in sizes)
+    TARGET_W, TARGET_H = _fit_size(TARGET_W, TARGET_H, cell_width, cell_height)
     print(f"  Target: {TARGET_W}x{TARGET_H}")
 
     # Resize
@@ -146,9 +244,9 @@ def merge_videos(videos, template, labels=None, output=None, gap=4, fps=30,
             out.append(frame)
         resized.append(out)
 
-    min_n = min(len(f) for f in resized)
-    cropped = [f[:min_n] for f in resized]
-    h, w = cropped[0][0].shape[:2]
+    frame_counts = [len(f) for f in resized]
+    out_n = max(frame_counts) if loop_to_longest else min(frame_counts)
+    h, w = resized[0][0].shape[:2]
 
     # Grid dimensions
     out_h = rows * h + (rows - 1) * gap
@@ -156,38 +254,37 @@ def merge_videos(videos, template, labels=None, output=None, gap=4, fps=30,
     positions = compute_positions(h, w, rows, cols, gap)
     font = _get_font(font_size) if labels else None
 
-    print(f"  Composing {min_n} frames at {out_w}x{out_h} ({template}) ...")
+    mode = "loop-to-longest" if loop_to_longest else "crop-to-shortest"
+    print(f"  Composing {out_n} frames at {out_w}x{out_h} ({template}, {mode}) ...")
 
-    result = []
-    for i in range(min_n):
+    output.parent.mkdir(parents=True, exist_ok=True)
+    writer = imageio.get_writer(str(output), fps=fps, codec="libx264") if stream else None
+    result = [] if not stream else None
+    for i in range(out_n):
         canvas = np.full((out_h, out_w, 3), (60, 60, 60), dtype=np.uint8)
         for j, (y, x) in enumerate(positions):
-            canvas[y:y+h, x:x+w] = cropped[j][i]
+            frames = resized[j]
+            frame_idx = i % len(frames) if loop_to_longest else i
+            canvas[y:y+h, x:x+w] = frames[frame_idx]
 
         # Draw labels
         if labels:
-            img = Image.fromarray(canvas)
-            draw = ImageDraw.Draw(img)
-            for (y, x), label in zip(positions, labels):
-                pos = (x + 6, y + 4)
-                bbox = draw.textbbox(pos, label, font=font)
-                tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-                draw.rounded_rectangle(
-                    [pos[0]-2, pos[1]-1, pos[0]+tw+4, pos[1]+th+2],
-                    radius=3, fill=(0, 0, 0, 180),
-                )
-                draw.text(pos, label, font=font, fill=(255, 255, 0))
-            canvas = np.array(img)
+            canvas = _draw_labels(canvas, positions, labels, font)
 
-        result.append(canvas)
+        if writer is not None:
+            writer.append_data(canvas)
+        else:
+            result.append(canvas)
 
         if (i + 1) % 100 == 0:
-            print(f"    {i+1}/{min_n}")
+            print(f"    {i+1}/{out_n}")
 
-    output.parent.mkdir(parents=True, exist_ok=True)
-    iio.imwrite(str(output), result, plugin="pyav", fps=fps, codec="libx264")
+    if writer is not None:
+        writer.close()
+    else:
+        iio.imwrite(str(output), result, plugin="pyav", fps=fps, codec="libx264")
     size_mb = output.stat().st_size / 1024 / 1024
-    print(f"\nDone: {output} ({min_n} frames, {size_mb:.1f} MB)")
+    print(f"\nDone: {output} ({out_n} frames, {size_mb:.1f} MB)")
 
 
 def main():
@@ -207,9 +304,18 @@ def main():
                         help="Label font size (default: 20)")
     parser.add_argument("--no-labels", action="store_true",
                         help="Skip cell labels")
+    parser.add_argument("--loop-to-longest", action="store_true",
+                        help="Use the longest input duration; shorter videos loop")
+    parser.add_argument("--stream", action="store_true",
+                        help="Stream encoded frames instead of keeping output in memory")
+    parser.add_argument("--cell-width", type=int, default=None,
+                        help="Maximum output width per grid cell")
+    parser.add_argument("--cell-height", type=int, default=None,
+                        help="Maximum output height per grid cell")
     args = parser.parse_args()
     merge_videos(args.videos, args.template, args.labels, args.output,
-                 args.gap, args.fps, args.font_size, args.no_labels)
+                 args.gap, args.fps, args.font_size, args.no_labels,
+                 args.loop_to_longest, args.stream, args.cell_width, args.cell_height)
 
 
 if __name__ == "__main__":

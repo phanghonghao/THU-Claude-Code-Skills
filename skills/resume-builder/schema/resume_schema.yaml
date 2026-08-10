@@ -20,6 +20,8 @@ personal:
   email: "example@mail.com"        # 邮箱
   address: "XX省XX市XX大学"          # 地址
   target: "机器人系统研发与项目管理"   # 求职意向
+  extra: "女 · 2000.08 · 汉族"      # 可选附加信息行（性别/出生年月/民族等），留空不渲染
+  photo: ""                        # 可选证件照；或用 --photo-from 从原履历(.pdf/.jpg)自动识别裁剪，嵌入页眉右上角
 
 # --- 教育背景（列表）---
 education:
@@ -41,6 +43,17 @@ projects:
     tech: "技术栈描述"             # 可留空
     desc: "项目描述"
     details: "具体内容描述"        # 可留空
+
+# --- 工作经历（列表；适合社招/医学/非工程类简历，可选）---
+work_experience:
+  - name: "XX医院 / XX公司"
+    start: "2025.07"
+    end: "至今"
+    role: "耳鼻喉科医师 / 某职位"   # 可留空
+    desc: "一句话概述"             # 可留空
+    bullets:                       # 可选，逐条要点
+      - "要点一"
+      - "要点二"
 
 # --- 实验室经历（列表）---
 lab_experience:
@@ -69,6 +82,13 @@ skills:
   languages: "C++, Python, C, Matlab"
   hardware: "STM32, QArm (4DOF), Arduino"
   languages_spoken: "中文、英文"
+  certificates: "大学英语六级 CET-6、计算机二级"   # 可选；证书/荣誉行
+  professional: "临床诊疗 / 某专业能力描述"        # 可选；专业能力行
+
+# --- 自我评价（可选；字符串=整段，列表=逐条要点）---
+self_evaluation:
+  - "医学背景扎实：五年制临床医学本科……"
+  - "技能全面：掌握基础外科操作……"
 
 # --- 社会实践 ---
 social_practice:

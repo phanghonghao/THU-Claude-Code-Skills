@@ -1,6 +1,0 @@
-# JianYing Cached Audio Assets (Physical files synced via sync_jy_assets.py)
-# AI Guidance: These files exist locally. Use 'path' column directly with add_audio_safe().
-# To refresh: run 'python scripts/sync_jy_assets.py'
-identifier,author,duration,path,category
-JY_Cached_03d9ad,Unknown,0,C:\Users\20174\.claude\skills\jianying-editor\assets\jy_sync\JY_Cached_03d9ad.mp3,jy_cached_unknown
-JY_Cached_61421e,Unknown,0,C:\Users\20174\.claude\skills\jianying-editor\assets\jy_sync\JY_Cached_61421e.mp3,jy_cached_unknown

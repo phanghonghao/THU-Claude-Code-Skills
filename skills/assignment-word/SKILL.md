@@ -26,13 +26,13 @@ python -m pip install python-docx 2>&1 | tail -3
 Prints paragraphs, tables, headers/footers with index numbers for targeting edits.
 
 ```bash
-PYTHONIOENCODING=utf-8 python "C:/Users/20174/.claude/skills/assignment-word/docx_editor.py" info "<docx_path>"
+PYTHONIOENCODING=utf-8 python "<LOCAL_USER>/.claude/skills/assignment-word/docx_editor.py" info "<docx_path>"
 ```
 
 ### replace — Find and replace text (preserving formatting)
 
 ```bash
-PYTHONIOENCODING=utf-8 python "C:/Users/20174/.claude/skills/assignment-word/docx_editor.py" replace "<docx_path>" --old "OLD_TEXT" --new "NEW_TEXT" [-o output.docx]
+PYTHONIOENCODING=utf-8 python "<LOCAL_USER>/.claude/skills/assignment-word/docx_editor.py" replace "<docx_path>" --old "OLD_TEXT" --new "NEW_TEXT" [-o output.docx]
 ```
 
 ### fill — Batch replace placeholders from JSON
@@ -40,13 +40,13 @@ PYTHONIOENCODING=utf-8 python "C:/Users/20174/.claude/skills/assignment-word/doc
 JSON format: `{ "placeholder1": "value1", "placeholder2": "value2" }`
 
 ```bash
-PYTHONIOENCODING=utf-8 python "C:/Users/20174/.claude/skills/assignment-word/docx_editor.py" fill "<docx_path>" --data replacements.json [-o output.docx]
+PYTHONIOENCODING=utf-8 python "<LOCAL_USER>/.claude/skills/assignment-word/docx_editor.py" fill "<docx_path>" --data replacements.json [-o output.docx]
 ```
 
 ### image — Insert image after matching text
 
 ```bash
-PYTHONIOENCODING=utf-8 python "C:/Users/20174/.claude/skills/assignment-word/docx_editor.py" image "<docx_path>" --after "图1" --img "figure.png" [-o output.docx]
+PYTHONIOENCODING=utf-8 python "<LOCAL_USER>/.claude/skills/assignment-word/docx_editor.py" image "<docx_path>" --after "图1" --img "figure.png" [-o output.docx]
 ```
 
 ### table — Fill table data from JSON
@@ -54,7 +54,7 @@ PYTHONIOENCODING=utf-8 python "C:/Users/20174/.claude/skills/assignment-word/doc
 JSON format: `{ "cells": { "0,0": "value", "1,2": "value" } }` (row,col → value)
 
 ```bash
-PYTHONIOENCODING=utf-8 python "C:/Users/20174/.claude/skills/assignment-word/docx_editor.py" table "<docx_path>" --idx 0 --data table_data.json [-o output.docx]
+PYTHONIOENCODING=utf-8 python "<LOCAL_USER>/.claude/skills/assignment-word/docx_editor.py" table "<docx_path>" --idx 0 --data table_data.json [-o output.docx]
 ```
 
 ## Arguments

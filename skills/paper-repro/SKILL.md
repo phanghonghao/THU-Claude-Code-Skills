@@ -48,7 +48,7 @@ triggers:
 ### Stage A — 读懂论文（委派 /paper-html-onepage，不改它）
 
 ```bash
-python "C:\Users\20174\.claude\skills\paper-html-onepage\scripts\paper_to_onepage_html.py" \
+python "<SKILL_ROOT>\paper-html-onepage\scripts\paper_to_onepage_html.py" \
   --url "<arxiv_url>" --out "<outdir>/<name>_summary.html"
 ```
 （关键词搜用 `--query`；本地 PDF 用 `--pdf`。）得到 `<name>_summary.html`。
@@ -56,7 +56,7 @@ python "C:\Users\20174\.claude\skills\paper-html-onepage\scripts\paper_to_onepag
 ### Stage B — 找代码（scripts/find_repo.py）
 
 ```bash
-python "C:\Users\20174\.claude\skills\paper-repro\scripts\find_repo.py" "1706.03762" --top 6
+python "<SKILL_ROOT>\scripts\find_repo.py" "1706.03762" --top 6
 # 加 --json 拿结构化结果
 ```
 arXiv ID → 自动取标题 → GitHub 按标题搜（比搜裸 ID 召回高）。多个候选时**让用户确认**用哪个。
@@ -65,7 +65,7 @@ arXiv ID → 自动取标题 → GitHub 按标题搜（比搜裸 ID 召回高）
 ### Stage C — 分析完整复现要求（scripts/analyze_repo.py）
 
 ```bash
-python "C:\Users\20174\.claude\skills\paper-repro\scripts\analyze_repo.py" "<repo_url>" --json > analyze_report.json
+python "<SKILL_ROOT>\scripts\analyze_repo.py" "<repo_url>" --json > analyze_report.json
 ```
 免克隆（走 GitHub tree API + raw）读 README/依赖/训练入口/配置，grep 资源信号（n_gpu、deepspeed、
 batch_size、epochs、数据集路径），产出 JSON 可行性报告：入口、依赖、GPU 需求、阻断项、建议的最小化覆盖项。
@@ -91,7 +91,7 @@ batch_size、epochs、数据集路径），产出 JSON 可行性报告：入口�
 3. 跑完调通用解析器出结果：
 
 ```bash
-python "C:\Users\20174\.claude\skills\paper-repro\scripts\summarize_eval.py" \
+python "<SKILL_ROOT>\scripts\summarize_eval.py" \
   --log train_log.csv --chart training_curve.png \
   --task "<论文短名> 最小复现" --acc-threshold 0.8
 ```
@@ -101,7 +101,7 @@ python "C:\Users\20174\.claude\skills\paper-repro\scripts\summarize_eval.py" \
 ### Stage F — 汇总报告（scripts/cost_estimate.py + 综合）
 
 ```bash
-python "C:\Users\20174\.claude\skills\paper-repro\scripts\cost_estimate.py" \
+python "<SKILL_ROOT>\scripts\cost_estimate.py" \
   --report analyze_report.json --params <approx_params>
 ```
 给出完整复现成本（GPU-小时 + 本机可行性）。

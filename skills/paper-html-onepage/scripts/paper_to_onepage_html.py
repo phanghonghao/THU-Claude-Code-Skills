@@ -1499,9 +1499,9 @@ def build_from_url(url, out_path, max_pages, keep_pdf, keep_fulltext_html):
     render_onepage_html(meta, full_text, pages_read, out_path)
 
     kept_pdf = ''
+    copied_source = False
     if keep_pdf:
-        shutil.copy2(tmp_pdf, semantic_pdf_path)
-        kept_pdf = semantic_pdf_path
+        kept_pdf, copied_source = ensure_local_source_pdf(tmp_pdf, semantic_pdf_path)
     cleanup_file_quietly(tmp_pdf)
 
     if keep_fulltext_html:
@@ -1509,7 +1509,8 @@ def build_from_url(url, out_path, max_pages, keep_pdf, keep_fulltext_html):
     else:
         cleanup_file_quietly(html_full_path)
     if kept_pdf:
-        print(f'[OK] source pdf kept: {kept_pdf}')
+        status = 'copied' if copied_source else 'ready'
+        print(f'[OK] source pdf {status}: {kept_pdf}')
     return out_path
 
 
@@ -1526,26 +1527,25 @@ def build_from_query(query, out_path, max_pages, pick, keep_pdf, keep_fulltext_h
     out_path = choose_output_path(meta, out_path, '')
     out_path, html_full_path = derive_intermediate_paths(out_path)
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
-
     semantic_pdf_path = choose_pdf_path_for_output(out_path)
-
-    if keep_pdf:
-        pdf_path = semantic_pdf_path
-    else:
-        fd, pdf_path = tempfile.mkstemp(prefix='paper_', suffix='.pdf')
-        os.close(fd)
-
-    download_pdf(meta['pdf_url'], pdf_path)
-    full_text, pages_read, _ = extract_pdf_text(pdf_path, max_pages=max_pages)
+    fd, tmp_pdf = tempfile.mkstemp(prefix='paper_', suffix='.pdf')
+    os.close(fd)
+    download_pdf(meta['pdf_url'], tmp_pdf)
+    full_text, pages_read, _ = extract_pdf_text(tmp_pdf, max_pages=max_pages)
     render_fulltext_html(meta, full_text, pages_read, html_full_path)
     render_onepage_html(meta, full_text, pages_read, out_path)
+    kept_pdf = ''
+    copied_source = False
+    if keep_pdf:
+        kept_pdf, copied_source = ensure_local_source_pdf(tmp_pdf, semantic_pdf_path)
     if keep_fulltext_html:
         print(f'[OK] fulltext html: {html_full_path}')
     else:
         cleanup_file_quietly(html_full_path)
-
-    if not keep_pdf:
-        cleanup_file_quietly(pdf_path)
+    if kept_pdf:
+        status = 'copied' if copied_source else 'ready'
+        print(f'[OK] source pdf {status}: {kept_pdf}')
+    cleanup_file_quietly(tmp_pdf)
     return out_path
 
 
@@ -1578,11 +1578,13 @@ def main():
     ap.add_argument('--out', help='output html path; if omitted, auto-name from detected paper keyword/title')
     ap.add_argument('--max-pages', type=int, default=80)
     ap.add_argument('--pick', type=int, default=1)
-    ap.add_argument('--keep-pdf', action='store_true')
+    ap.add_argument('--keep-pdf', dest='keep_pdf', action='store_true', help='keep the local source pdf next to the output html (default for --url/--query)')
+    ap.add_argument('--no-keep-pdf', dest='keep_pdf', action='store_false', help='discard downloaded pdf after rendering; restores the old temp-file behavior')
     ap.add_argument('--keep-fulltext-html', action='store_true', help='keep the intermediate fulltext html; default deletes it after summary generation')
     ap.add_argument('--compare', action='store_true', help='compare 2+ papers/files into one colorful/minimal page')
     ap.add_argument('--items', nargs='*', help='paths for compare mode (pdf/html/txt); if omitted, interactive prompt')
     ap.add_argument('--compare-style', choices=['colorful', 'minimal'], default='colorful', help='compare style; default colorful')
+    ap.set_defaults(keep_pdf=True)
     args = ap.parse_args()
 
     if args.compare:
@@ -1619,4 +1621,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

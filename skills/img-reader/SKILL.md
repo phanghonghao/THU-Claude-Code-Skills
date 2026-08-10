@@ -74,14 +74,14 @@ print(save_path)
 当 Tier 0 置信度低时，**自动调用**（不问用户）：
 
 ```bash
-python "C:/Users/20174/.claude/skills/img-reader/vision_api.py" "<image_path>" "<prompt>"
+python "<LOCAL_USER>/.claude/skills/img-reader/vision_api.py" "<image_path>" "<prompt>"
 ```
 
 **前提**：需要 `ZHIPU_API_KEY` 环境变量（免费注册 https://open.bigmodel.cn 获取）
 
 ### API Key 配置（三选一）
 1. 环境变量：`set ZHIPU_API_KEY=xxx`
-2. `.env` 文件：放在 `C:/Users/20174/.claude/skills/img-reader/.env`，内容 `ZHIPU_API_KEY=xxx`
+2. `.env` 文件：放在 `<LOCAL_USER>/.claude/skills/img-reader/.env`，内容 `ZHIPU_API_KEY=xxx`
 3. 首次使用时提示用户注册并配置
 
 ### 安装依赖
@@ -106,13 +106,13 @@ python -m pip install zhipuai -q
 
 ```bash
 # 普通文字识别
-python "C:/Users/20174/.claude/skills/img-reader/ocr_local.py" "<image_path>"
+python "<LOCAL_USER>/.claude/skills/img-reader/ocr_local.py" "<image_path>"
 
 # 表格/明细表提取
-python "C:/Users/20174/.claude/skills/img-reader/ocr_local.py" "<image_path>" --table
+python "<LOCAL_USER>/.claude/skills/img-reader/ocr_local.py" "<image_path>" --table
 
 # 首次使用自动安装
-python "C:/Users/20174/.claude/skills/img-reader/ocr_local.py" "<image_path>" --install
+python "<LOCAL_USER>/.claude/skills/img-reader/ocr_local.py" "<image_path>" --install
 ```
 
 ### 安装依赖（自动）

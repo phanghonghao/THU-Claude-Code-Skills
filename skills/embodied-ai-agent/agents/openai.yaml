@@ -1,4 +1,0 @@
-﻿interface:
-  display_name: "Multi-Source-Research-Agent"
-  short_description: "多源研究内容检索、整理与中文 Wiki 草稿生成（Bilibili + GitHub）"
-  default_prompt: "Use $embodied-ai-agent to research a Bilibili video, a GitHub repository, or a keyword, then organize the result into topic-routed Chinese wiki drafts."

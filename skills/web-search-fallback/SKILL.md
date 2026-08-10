@@ -24,6 +24,9 @@ triggers:
   - 搜github
   - 查开源
   - alternative search
+  - zhihu
+  - 知乎
+  - zhuanlan.zhihu.com
 ---
 
 # Web Search Fallback — 零 MCP 额度的本地搜索/阅读
@@ -42,6 +45,7 @@ triggers:
 | 搜 GitHub 仓库 | **Route 2: GitHub API** | `gh search repos` 或 `curl` REST API |
 | 论文引用/关联图谱 | **Route 3: Semantic Scholar** | `curl` JSON API |
 | 读特定 URL 内容 | **Route 4: 直接 curl 抓取** | `curl -sL` + 文本提取 |
+| 读知乎专栏文章 | **Route 4b: 知乎 / Jina Reader** | `curl https://r.jina.ai/<url>` |
 | 通用网络搜索 | **Route 5: DuckDuckGo HTML** | `curl` + grep（兜底，质量有限） |
 
 **Windows 注意**: 用 `python` 而非 `python3`（Windows App Execution Alias 会拦截 `python3`）。
@@ -153,7 +157,7 @@ curl -sL "https://api.semanticscholar.org/graph/v1/paper/ARXIV:2310.12931/citati
 
 ## Route 4: 直接 curl 抓取网页
 
-适用于已知 URL，提取文本内容（无 JS 渲染）。
+适用于已知 URL，提取文本内容（无 JS 渲染）。JS 渲染页（知乎、SPA 等）走 **Route 4b**。
 
 ```bash
 # 抓取并转为纯文本（去 HTML 标签）
@@ -171,6 +175,36 @@ arxiv PDF 无法直接 curl 解析，但可以：
 1. 用 arxiv API 取摘要（Route 1）
 2. 用 Semantic Scholar 取摘要（Route 3）
 3. 提示用户用 `/pdf-reader` skill 读本地下载的 PDF
+
+---
+
+## Route 4b: 知乎专栏 / 通用 JS 渲染页面（Jina Reader）
+
+知乎对 curl / 普通 UA 返回 403，且是 JS 渲染页，Route 4 的 `curl` + `sed` 抓不到正文。
+用 Jina Reader 代理 `https://r.jina.ai/<目标URL>`，免费、无需 key、返回干净的 Markdown。
+
+```bash
+curl -sL --max-time 60 "https://r.jina.ai/https://zhuanlan.zhihu.com/p/<ARTICLE_ID>" -o /tmp/article.md
+```
+
+**注意（Windows/Git Bash）**：`/tmp` 实际在 `D:\Users\<user>\AppData\Local\Temp\`。用 `cygpath -w` 拿到 Windows 绝对路径后再用 Read 工具读取：
+```bash
+cygpath -w /tmp/article.md
+```
+
+### 产物整理（重要）
+
+抓到的 Markdown 头几行是 Jina 的元数据（`Title:` / `URL Source:` / `Markdown Content:`），**写入正式文件前删除这几行**，只保留正文。
+
+知乎正文里大量指向 `zhida.zhihu.com/search?content_id=...&zd_token=...` 的词条自链：
+- 这些链接是**会话级 token，会过期**，长期保存没有价值；
+- 写入 Markdown 时应**还原为纯文本词条**（去掉 `[词条](url)` 链接包装），保留**真正的站外链接**（arxiv、GitHub、`link.zhihu.com/?target=...` 外链、其它专栏文章）；
+- 图片 `![Image N](https://pica.zhimg.com/...)` 保留原 URL，图片不下载。
+
+### 替代方案
+
+- 网页版知乎 `zhuanlan.zhihu.com` 走不通时，可尝试 `zhihu.com/question/<id>` 镜像与移动端 `zhuanlan.zhihu.com/p/<id>`（HTTPS 升级后若 403，退回 r.jina.ai）。
+- Jina 偶尔限流，可重试一次；仍失败则告诉用户 /web-search-fallback 免费路线拿不到该页面，建议浏览器手动复制。
 
 ---
 
@@ -211,6 +245,7 @@ curl -sL "https://html.duckduckgo.com/html/?q=KEYWORD" | grep -oP 'https?://[^"<
     │     │  GitHub  → Route 2 (gh/API)  │
     │     │  论文关系 → Route 3 (S2)     │
     │     │  读网页   → Route 4 (curl)   │
+    │     │  读知乎   → Route 4b (Jina)  │
     │     │  通用搜索 → Route 5 (DDG)    │
     │     └─────────────────────────────┘
     │
@@ -235,11 +270,14 @@ curl -sL "https://html.duckduckgo.com/html/?q=KEYWORD" | grep -oP 'https?://[^"<
 ### "读一下这个项目主页"
 → Route 4 (curl + sed 去 HTML 标签)
 
+### "抓取这篇知乎文章全文存成 .md"
+→ Route 4b (Jina Reader)，清理元数据头与 zhida 自链后写入目标文件
+
 ---
 
 ## 限制说明
 
 - **无法做真正的 Google/Bing 搜索** — 没有免费无限制的通用搜索 API。Route 5 (DuckDuckGo) 质量有限。
-- **无法渲染 JS 页面** — curl 只拿静态 HTML。SPA 网站可能拿不到内容。
+- **无法渲染 JS 页面** — curl 只拿静态 HTML。SPA 网站可能拿不到内容。**知乎等 JS 站请用 Route 4b (Jina Reader)。**
 - **arXiv 覆盖学术预印本** — 不含期刊专属或非 arXiv 论文。配 Semantic Scholar 补全。
 - **Windows 用 `python` 不是 `python3`** — App Execution Alias 会拦截 python3。

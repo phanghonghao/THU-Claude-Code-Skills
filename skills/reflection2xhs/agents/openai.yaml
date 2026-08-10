@@ -1,4 +1,0 @@
-interface:
-  display_name: "Reflection2XHS"
-  short_description: "将 reflection.md 转成一页小红书/A4 分享图"
-  default_prompt: "Use this skill when the user wants to turn a reflection markdown file into a polished single-page Xiaohongshu-style poster image via the OpenAI image API."

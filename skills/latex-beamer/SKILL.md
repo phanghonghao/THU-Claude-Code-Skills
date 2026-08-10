@@ -924,7 +924,7 @@ prs.save(os.path.join(BASE, "main.pptx"))
 ### 5.5 执行命令
 
 ```bash
-/c/Users/20174/AppData/Local/Programs/Python/Python314/python.exe gen_pptx.py
+<LOCAL_USER>/AppData/Local/Programs/Python/Python314/python.exe gen_pptx.py
 ```
 
 **注意**：
@@ -987,5 +987,5 @@ prs.save(os.path.join(BASE, "main.pptx"))
 - **xelatex** — 编译 ctex 版本（支持中英文、生僻字）
 - **python-pptx** — `pip install python-pptx` (LLM 生成 gen_pptx.py 复刻 Beamer 排版)
 - **Pillow** — `pip install Pillow` (GIF 帧提取，PDF animate 用)
-- **Python 3.14** — `/c/Users/20174/AppData/Local/Programs/Python/Python314/python.exe`
+- **Python 3.14** — `<LOCAL_USER>/AppData/Local/Programs/Python/Python314/python.exe`
 - **在线编译**: Overleaf（将 Compiler 设为 XeLaTeX 即可）

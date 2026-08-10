@@ -3,8 +3,8 @@
   [string]$OutputDir = '',
   [switch]$FixMathBackticks
 )
-$pre='C:\Users\20174\.codex\skills\md2tex\md_math_precheck.py'
-$core='C:\Users\20174\.codex\skills\md2tex\md2tex.py'
+$pre=Join-Path $PSScriptRoot 'md_math_precheck.py'
+$core=Join-Path $PSScriptRoot 'md2tex.py'
 if($FixMathBackticks){
   python $pre $InputMd --fix
 }else{

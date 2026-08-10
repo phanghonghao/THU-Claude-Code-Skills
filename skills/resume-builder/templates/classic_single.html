@@ -39,7 +39,15 @@
   }
 
   /* ===== 页眉 ===== */
-  .r-header { margin-bottom: 6px; }
+  .r-header { position: relative; margin-bottom: 6px; }
+  /* 有证件照时给右侧留位，避免姓名/联系方式压到照片下 */
+  .r-header.r-has-photo { padding-right: 30mm; }
+  .r-photo {
+    position: absolute; top: 0; right: 0;
+    width: 25mm; height: 33mm;            /* 1 寸证件照比例 ≈ 25×35mm */
+    object-fit: cover;
+    border: 0.5pt solid #bbb; border-radius: 1mm;
+  }
   .r-name {
     font-size: 19pt;
     font-weight: 700;
@@ -120,11 +128,15 @@
 
 <!--EDUCATION-->
 
+<!--WORK-->
+
 <!--PROJECTS-->
 
 <!--LAB-->
 
 <!--CLUBS_COMPETITIONS-->
+
+<!--SELF-->
 
 <!--SKILLS-->
 
